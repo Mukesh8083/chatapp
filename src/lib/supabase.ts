@@ -8,6 +8,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
+console.log('Supabase URL:', supabaseUrl);
+console.log('Supabase Anon Key:', supabaseAnonKey);
+
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
 export async function signUp(email: string, password: string) {
@@ -56,23 +59,28 @@ export async function signOut() {
 }
 
 export async function createChatSession() {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) throw new Error('Not authenticated');
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) throw new Error('Not authenticated');
 
-  const { data: session, error } = await supabase
-    .from('chat_sessions')
-    .insert({
-      user_id: user.id,
-    })
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return {
-    ...session,
-    messages: [],
-  };
+    const { data: session, error } = await supabase
+      .from('chat_sessions')
+      .insert({
+        user_id: user.id,
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return {
+      ...session,
+      messages: [],
+    };
+  } catch (error) {
+    console.error('Error creating chat session:', error);
+    throw error;
+  }
 }
 
 export async function getChatSessions() {
