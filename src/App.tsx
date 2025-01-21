@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { ChatWindow } from './components/ChatWindow';
 import { SessionList } from './components/SessionList';
 import { AuthPage } from './components/AuthPage';
-import { User, ChatSession } from './types';
-import { supabase, getChatSessions, createChatSession, sendMessage } from './lib/supabase';
+import { User, ChatSession, Message } from './types';
+import { supabase, getChatSessions, createChatSession, sendMessage, subscribeToMessages } from './lib/supabase';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -33,6 +33,13 @@ function App() {
       loadSessions();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (currentSessionId) {
+      const subscription = subscribeToMessages(currentSessionId, handleNewMessage);
+      return () => subscription.unsubscribe();
+    }
+  }, [currentSessionId]);
 
   const loadSessions = async () => {
     try {
@@ -73,6 +80,20 @@ function App() {
     } catch (error) {
       console.error('Error sending message:', error);
     }
+  };
+
+  const handleNewMessage = (message: Message) => {
+    setSessions((prevSessions) => {
+      return prevSessions.map((session) => {
+        if (session.id === message.session_id) {
+          return {
+            ...session,
+            messages: [...session.messages, message],
+          };
+        }
+        return session;
+      });
+    });
   };
 
   if (loading) {
