@@ -65,7 +65,10 @@ export async function createChatSession() {
     .insert({
       user_id: user.id,
     })
-    .select()
+    .select(`
+      *,
+      messages (*)
+    `)
     .single();
   
   if (error) throw error;
