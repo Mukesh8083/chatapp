@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, Send } from 'lucide-react';
 import { Message } from '../types';
+import { subscribeToMessages } from '../lib/supabase';
 
 interface ChatWindowProps {
   messages: Message[];
@@ -26,6 +27,15 @@ export function ChatWindow({ messages, onSendMessage }: ChatWindowProps) {
       setInput('');
     }
   };
+
+  const handleNewMessage = (message: Message) => {
+    // Handle new message
+  };
+
+  useEffect(() => {
+    const subscription = subscribeToMessages('currentSessionId', handleNewMessage);
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <div className="flex flex-col h-full">
